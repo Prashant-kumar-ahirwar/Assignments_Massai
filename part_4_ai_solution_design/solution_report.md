@@ -1,7 +1,5 @@
 # Part 4 – AI Solution Design
 
-# Domain: Manufacturing
-
 ---
 
 # Task 1: Choose a Business Domain
