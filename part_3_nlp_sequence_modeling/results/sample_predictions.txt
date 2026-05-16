@@ -1,0 +1,8 @@
+Input: "My refund is still pending"
+Predicted Sentiment: neutral
+
+Input: "Thank you for the quick support"
+Predicted Sentiment: positive
+
+Input: "The issue was resolved successfully"
+Predicted Sentiment: positive

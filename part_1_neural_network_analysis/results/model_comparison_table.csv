@@ -1,0 +1,6 @@
+  Experiment  Hidden Layers Neurons Activation  Epochs  Batch Size  Test Accuracy 
+0      Exp 1              1      16       ReLU      10          32   0.9825
+1      Exp 2              2   64-32       ReLU      20          32   0.9775
+2      Exp 3              2   64-32       Tanh      30          64   0.9800
+
+   
