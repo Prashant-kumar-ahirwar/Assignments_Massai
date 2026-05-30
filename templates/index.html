@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pattern Predictor AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #080812;
+      --surface:   #0e0e1f;
+      --surface2:  #141428;
+      --border:    #22224a;
+      --border2:   #2e2e60;
+      --accent:    #6c72ff;
+      --accent2:   #00d4ff;
+      --gold:      #f5c542;
+      --red:       #ff3e6c;
+      --green:     #1fdf5a;
+      --purple:    #b16bff;
+      --text:      #d8d8f0;
+      --muted:     #5a5a8a;
+      --mono:      'Space Mono', monospace;
+      --sans:      'DM Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .header-stats { display: flex; gap: 6px; flex-wrap: wrap; }
+    .stat-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.73rem;
+      font-family: var(--mono);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .stat-pill b { color: var(--accent2); }
+    .stat-pill.num-pill b  { color: var(--gold); }
+    .stat-pill.col-pill b  { color: var(--purple); }
+    .stat-pill.mod-pill b  { color: var(--accent2); }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 24px;
+    }
+
+    /* ── Input Panel ─────────────────────────────────────────────── */
+    .input-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    /* Left half: predict */
+    .input-half {
+      flex: 1;
+      padding: 22px 26px;
+    }
+    .input-half.train-half {
+      border-left: 1px solid var(--border);
+      background: rgba(31,223,90,0.03);
+    }
+
+    .panel-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .input-group label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .num-field {
+      width: 96px;
+      padding: 12px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      color: white;
+      font-size: 1.35rem;
+      font-family: var(--mono);
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .num-field:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,114,255,0.15);
+    }
+    .num-field::placeholder { color: var(--muted); font-size: 0.85rem; }
+
+    .predict-btn {
+      padding: 12px 22px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      align-self: flex-end;
+    }
+    .predict-btn:hover  { background: #8088ff; transform: translateY(-1px); }
+    .predict-btn:active { transform: translateY(0); }
+
+    /* Train inline row */
+    .train-inline-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .train-inline-row .actual-field {
+      width: 80px;
+    }
+
+    /* ── Results Grid ─────────────────────────────────────────────── */
+    .results-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Prediction Cards ────────────────────────────────────────── */
+    .section-header {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+      gap: 10px;
+    }
+    .pred-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 12px 12px;
+      text-align: center;
+      position: relative;
+      cursor: default;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .pred-card:hover { transform: translateY(-2px); }
+    .pred-card.top   { border-color: var(--gold); background: #151507; }
+
+    .card-rank {
+      position: absolute;
+      top: 7px; right: 9px;
+      font-size: 0.62rem;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+    .pred-card.top .card-rank { color: var(--gold); }
+
+    .card-num {
+      font-family: var(--mono);
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text);
+    }
+    .pred-card.top .card-num { color: var(--gold); }
+
+    .card-prob {
+      margin-top: 6px;
+      font-size: 0.82rem;
+      color: var(--accent2);
+      font-family: var(--mono);
+    }
+
+    /* Color badge on card */
+    .card-color-tag {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.62rem;
+      font-family: var(--mono);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .card-color-tag.red    { background: rgba(255,62,108,0.15); color: var(--red); }
+    .card-color-tag.green  { background: rgba(31,223,90,0.15);  color: var(--green); }
+    .card-color-tag.purple { background: rgba(177,107,255,0.18); color: var(--purple); }
+
+    .prob-track {
+      margin-top: 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      height: 3px;
+      overflow: hidden;
+    }
+    .prob-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #4a51d4, var(--accent));
+      transition: width 0.6s cubic-bezier(.22,.68,0,1.2);
+    }
+    .pred-card.top .prob-fill { background: linear-gradient(90deg, #b08800, var(--gold)); }
+
+    /* ── Right Panel ──────────────────────────────────────────────── */
+    .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+    .side-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+    .side-card h3 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* Color bars */
+    .color-label-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .cdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .cdot.red    { background: var(--red); }
+    .cdot.green  { background: var(--green); }
+    .cdot.purple { background: var(--purple); }
+    .clabel { font-size: 0.78rem; width: 46px; font-family: var(--mono); }
+    .ctrack {
+      flex: 1;
+      background: var(--bg);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .cfill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .cfill.red    { background: var(--red); }
+    .cfill.green  { background: var(--green); }
+    .cfill.purple { background: var(--purple); }
+    .cpct { font-size: 0.75rem; font-family: var(--mono); width: 38px; text-align: right; }
+
+    .color-sub {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+
+    /* ── Small / Big panel ────────────────────────────────────────── */
+    .sb-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .sb-half {
+      border-radius: 10px;
+      padding: 14px 10px 12px;
+      text-align: center;
+    }
+    .sb-half.small { background: rgba(108,114,255,0.12); border: 1px solid rgba(108,114,255,0.3); }
+    .sb-half.big   { background: rgba(245,197,66,0.10);  border: 1px solid rgba(245,197,66,0.3); }
+    .sb-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+    .sb-half.small .sb-label { color: #8e94ff; }
+    .sb-half.big   .sb-label { color: #c9a330; }
+    .sb-pct {
+      font-family: var(--mono);
+      font-size: 1.7rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+    .sb-half.small .sb-pct { color: var(--accent); }
+    .sb-half.big   .sb-pct { color: var(--gold); }
+    .sb-nums {
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 2px;
+      font-family: var(--mono);
+    }
+    .sb-divider {
+      height: 4px;
+      border-radius: 4px;
+      background: var(--bg);
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .sb-bar-small {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #3a40c0, var(--accent));
+      transition: width 0.6s cubic-bezier(.22,.68,0,1.2);
+      float: left;
+    }
+    .sb-bar-big {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--gold), #e6a800);
+      transition: width 0.6s cubic-bezier(.22,.68,0,1.2);
+      float: right;
+    }
+    .sb-winner {
+      text-align: center;
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      margin-top: 8px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .sb-winner b { color: var(--accent2); }
+
+    /* ── Feedback / Train ─────────────────────────────────────────── */
+    .fb-hint { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+    .fb-row  { display: flex; gap: 8px; margin-bottom: 10px; }
+    .actual-field {
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      color: white;
+      font-size: 1.2rem;
+      font-family: var(--mono);
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .actual-field:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(31,223,90,0.12);
+    }
+    .train-btn {
+      padding: 12px 16px;
+      background: var(--green);
+      border: none;
+      border-radius: 8px;
+      color: #030d0a;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      align-self: flex-end;
+    }
+    .train-btn:hover  { background: #3aff72; }
+    .train-btn:active { transform: scale(0.97); }
+
+    /* Auto color preview (read-only, derived from number) */
+    .auto-color-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      min-width: 110px;
+      height: 46px;
+    }
+    .acp-dot {
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .acp-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    /* color states driven by JS class */
+    .auto-color-preview.red    { border-color: var(--red); }
+    .auto-color-preview.green  { border-color: var(--green); }
+    .auto-color-preview.purple { border-color: var(--purple); }
+    .auto-color-preview.red    .acp-dot { background: var(--red); }
+    .auto-color-preview.green  .acp-dot { background: var(--green); }
+    .auto-color-preview.purple .acp-dot { background: var(--purple); }
+    .auto-color-preview.red    .acp-label { color: var(--red); }
+    .auto-color-preview.green  .acp-label { color: var(--green); }
+    .auto-color-preview.purple .acp-label { color: var(--purple); }
+
+    .fb-msg {
+      margin-top: 10px;
+      font-size: 0.74rem;
+      min-height: 18px;
+      font-family: var(--mono);
+      line-height: 1.4;
+    }
+    .fb-msg.ok  { color: var(--green); }
+    .fb-msg.err { color: var(--red); }
+
+    /* History log */
+    .log-scroll {
+      margin-top: 12px;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .log-scroll::-webkit-scrollbar { width: 4px; }
+    .log-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+    .log-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+    .log-entry .badge {
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 8px;
+    }
+    .badge.ok  { background: rgba(31,223,90,0.15); color: var(--green); }
+    .badge.err { background: rgba(255,62,108,0.15); color: var(--red); }
+
+    /* log color dot */
+    .log-cdot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .log-cdot.red    { background: var(--red); }
+    .log-cdot.green  { background: var(--green); }
+    .log-cdot.purple { background: var(--purple); }
+
+    /* Empty + loading */
+    .empty-state {
+      color: var(--muted);
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 0.85rem;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .results-wrapper { grid-template-columns: 1fr; }
+    }
+    /* Stack predict / train halves on narrow screens */
+    @media (max-width: 720px) {
+      .input-panel { flex-direction: column; }
+      .input-half.train-half {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        background: rgba(31,223,90,0.03);
+      }
+    }
+    @media (max-width: 740px) {
+      header { padding: 8px 12px; flex-wrap: wrap; height: auto; gap: 6px; }
+      .header-stats { gap: 4px; }
+      .stat-pill { font-size: 0.65rem; padding: 4px 8px; }
+      main { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    PATTERN PREDICTOR AI
+  </div>
+  <div class="header-stats">
+    <div class="stat-pill num-pill">S/B Acc <b id="hNumAcc">—</b></div>
+    <div class="stat-pill col-pill">Color Acc <b id="hColAcc">—</b></div>
+    <div class="stat-pill mod-pill">Model Acc <b id="hModAcc">—</b></div>
+    <div class="stat-pill">Trained <b id="hTotal">—</b> rounds</div>
+  </div>
+</header>
+
+<!-- ── Main ──────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Input panel: Predict ║ Train side by side -->
+  <div class="input-panel">
+
+    <!-- LEFT: Predict -->
+    <div class="input-half">
+      <div class="panel-label">📡 Predict Next Number</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>PREV NUMBER</label>
+          <input class="num-field" type="number" id="prevNum" placeholder="opt" min="0" max="9">
+        </div>
+        <div class="input-group">
+          <label>CURRENT NUMBER *</label>
+          <input class="num-field" type="number" id="currNum" placeholder="0–9" min="0" max="9">
+        </div>
+        <button class="predict-btn" id="predictBtn" onclick="doPrediction()">
+          Predict Next →
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Train -->
+    <div class="input-half train-half">
+      <div class="panel-label">🎓 Teach the Model — what actually appeared?</div>
+      <div class="train-inline-row">
+        <div class="input-group">
+          <label>ACTUAL NUMBER</label>
+          <input class="actual-field num-field" type="number" id="actualNum" placeholder="?" min="0" max="9">
+        </div>
+        <div class="input-group">
+          <div class="color-select-label">Auto Color</div>
+          <div class="auto-color-preview" id="autoColorPreview">
+            <span class="acp-dot" id="acpDot"></span>
+            <span class="acp-label" id="acpLabel">—</span>
+          </div>
+        </div>
+        <button class="train-btn" onclick="doFeedback()">Train ↑</button>
+      </div>
+      <div class="fb-msg" id="fbMsg"></div>
+    </div>
+
+  </div>
+
+  <!-- Results (hidden until first prediction) -->
+  <div class="results-wrapper" id="results" style="display:none;">
+
+    <!-- Left: prediction cards -->
+    <div>
+      <div class="section-header">Predicted next numbers — ranked by pattern probability</div>
+      <div class="cards-grid" id="cardsGrid">
+        <div class="empty-state">Waiting for input…</div>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="right-col">
+
+      <!-- Small / Big probability -->
+      <div class="side-card">
+        <h3>Small vs Big Probability</h3>
+        <div class="sb-row">
+          <div class="sb-half small">
+            <div class="sb-label">SMALL</div>
+            <div class="sb-pct" id="smallPct">—</div>
+            <div class="sb-nums">0 · 1 · 2 · 3 · 4</div>
+          </div>
+          <div class="sb-half big">
+            <div class="sb-label">BIG</div>
+            <div class="sb-pct" id="bigPct">—</div>
+            <div class="sb-nums">5 · 6 · 7 · 8 · 9</div>
+          </div>
+        </div>
+        <div class="sb-divider" id="sbDivider">
+          <div class="sb-bar-small" id="sbBarSmall" style="width:50%"></div>
+          <div class="sb-bar-big"   id="sbBarBig"   style="width:50%"></div>
+        </div>
+        <div class="sb-winner" id="sbWinner">Predict to see small / big breakdown</div>
+      </div>
+
+      <!-- Color probability — weighted across ALL predictions -->
+      <div class="side-card">
+        <h3>Color Probability — all numbers</h3>
+        <div class="color-label-row">
+          <div class="cdot red"></div>
+          <span class="clabel">Red</span>
+          <div class="ctrack">
+            <div class="cfill red" id="redFill" style="width:0%"></div>
+          </div>
+          <span class="cpct" id="redPct">—</span>
+        </div>
+        <div class="color-label-row">
+          <div class="cdot green"></div>
+          <span class="clabel">Green</span>
+          <div class="ctrack">
+            <div class="cfill green" id="greenFill" style="width:0%"></div>
+          </div>
+          <span class="cpct" id="greenPct">—</span>
+        </div>
+        <div class="color-label-row">
+          <div class="cdot purple"></div>
+          <span class="clabel">Purple</span>
+          <div class="ctrack">
+            <div class="cfill purple" id="purpleFill" style="width:0%"></div>
+          </div>
+          <span class="cpct" id="purplePct">—</span>
+        </div>
+        <div class="color-sub">Weighted average across all predicted numbers. Numbers 0 &amp; 5 are always Purple.</div>
+      </div>
+
+      <!-- Session history log (compact) -->
+      <div class="side-card">
+        <h3>Session Log</h3>
+        <div class="log-scroll" id="logScroll">
+          <div style="color:var(--muted);font-size:0.72rem;font-family:var(--mono);">No entries yet…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────────── -->
+<script>
+  /* ── Fixed color rules (mirrors app.py) ────────────────────────── */
+  function primaryColor(num) {
+    return num % 2 === 0 ? 'red' : 'green';
+  }
+  function isPurple(num) {
+    return num === 0 || num === 5;
+  }
+  function colorLabel(num) {
+    const pc = primaryColor(num);
+    if (isPurple(num)) return pc.toUpperCase() + ' + PURPLE';
+    return pc.toUpperCase();
+  }
+  function dominantColor(num) {
+    // For card badge & log dot: purple wins display for 0 and 5
+    return isPurple(num) ? 'purple' : primaryColor(num);
+  }
+
+  /* ── State ─────────────────────────────────────────────────────── */
+  let lastCur         = null;
+  let lastPrev        = null;
+  let lastTop         = null;    // top predicted number
+  let lastPredictedSB = null;    // 'small' | 'big'
+  const history       = [];
+
+  /* ── Helpers ───────────────────────────────────────────────────── */
+  function setStats(sbAcc, colAcc, modAcc, total) {
+    document.getElementById('hNumAcc').textContent = sbAcc  + '%';
+    document.getElementById('hColAcc').textContent = colAcc + '%';
+    document.getElementById('hModAcc').textContent = modAcc + '%';
+    document.getElementById('hTotal').textContent  = total;
+  }
+
+  function showMsg(text, isOk) {
+    const el = document.getElementById('fbMsg');
+    el.textContent = text;
+    el.className   = 'fb-msg ' + (isOk ? 'ok' : 'err');
+  }
+
+  /* ── Auto color preview in train panel ─────────────────────────── */
+  function updateColorPreview(num) {
+    const el   = document.getElementById('autoColorPreview');
+    const lbl  = document.getElementById('acpLabel');
+    el.className = 'auto-color-preview';
+    if (num === null || isNaN(num) || num < 0 || num > 9) {
+      lbl.textContent = '—';
+      return;
+    }
+    const dc = dominantColor(num);
+    el.classList.add(dc);
+    lbl.textContent = colorLabel(num);
+  }
+
+  document.getElementById('actualNum').addEventListener('input', function () {
+    const v = parseInt(this.value);
+    updateColorPreview(isNaN(v) ? null : v);
+  });
+
+  /* ── Log ───────────────────────────────────────────────────────── */
+  function renderLog() {
+    const el = document.getElementById('logScroll');
+    if (!history.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:0.72rem;font-family:var(--mono);">No entries yet…</div>';
+      return;
+    }
+    el.innerHTML = history.map(h => {
+      const sbPred = h.predSB ? h.predSB.toUpperCase() : '?';
+      const sbReal = h.actualSB ? h.actualSB.toUpperCase() : '?';
+      const dc     = dominantColor(h.actual);
+      return `
+        <div class="log-entry">
+          <span>${h.prev ?? '–'}→${h.cur}
+            &nbsp;SB:<b>${sbPred}</b>→<b>${sbReal}</b>
+            &nbsp;clr:<span class="log-cdot ${dc}"></span><b>${colorLabel(h.actual)}</b>
+          </span>
+          <span class="badge ${h.sbCorrect ? 'ok' : 'err'}">${h.sbCorrect ? 'HIT ✓' : 'MISS ✗'}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  /* ── Prediction ────────────────────────────────────────────────── */
+  async function doPrediction() {
+    const curVal  = document.getElementById('currNum').value.trim();
+    const prevVal = document.getElementById('prevNum').value.trim();
+    if (!curVal) { document.getElementById('currNum').focus(); return; }
+
+    const btn = document.getElementById('predictBtn');
+    btn.innerHTML = '<span class="spinner"></span>Predicting…';
+    btn.disabled  = true;
+
+    try {
+      const res  = await fetch('/predict', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ current: curVal, prev: prevVal || null }),
+      });
+      const data = await res.json();
+
+      lastCur         = curVal;
+      lastPrev        = prevVal || null;
+      lastPredictedSB = data.predicted_sb ?? null;
+      lastTop         = data.top_predicted ?? null;
+
+      setStats(
+        data.sb_accuracy    ?? '—',
+        data.color_accuracy ?? '—',
+        data.model_accuracy ?? '—',
+        data.total_trained
+      );
+
+      document.getElementById('results').style.display = 'grid';
+
+      /* ── Render prediction cards ─────────────────────────────── */
+      const grid  = document.getElementById('cardsGrid');
+      const preds = data.predictions;
+      grid.innerHTML = '';
+
+      if (!preds.length) {
+        grid.innerHTML = `<div class="empty-state">No pattern data for <b>${curVal}</b> yet.<br>Keep training!</div>`;
+        lastTop = null;
+        return;
+      }
+
+      const maxP = preds[0].probability;
+      preds.forEach((p, i) => {
+        const dc  = dominantColor(p.number);
+        const clr = colorLabel(p.number);
+        const card = document.createElement('div');
+        card.className = 'pred-card' + (i === 0 ? ' top' : '');
+        card.innerHTML = `
+          <div class="card-rank">${i === 0 ? '★ TOP' : '#' + (i + 1)}</div>
+          <div class="card-num">${p.number}</div>
+          <div class="card-prob">${p.probability}%</div>
+          <span class="card-color-tag ${dc}">${clr}</span>
+          <div class="prob-track">
+            <div class="prob-fill" style="width:${(p.probability / maxP) * 100}%"></div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      /* ── Small / Big ─────────────────────────────────────────── */
+      let smallP = 0, bigP = 0;
+      preds.forEach(p => {
+        if (p.number <= 4) smallP += p.probability;
+        else               bigP   += p.probability;
+      });
+      smallP = Math.round(smallP * 10) / 10;
+      bigP   = Math.round(bigP   * 10) / 10;
+      const sbTotal = smallP + bigP || 1;
+      document.getElementById('smallPct').textContent   = smallP + '%';
+      document.getElementById('bigPct').textContent     = bigP   + '%';
+      document.getElementById('sbBarSmall').style.width = (smallP / sbTotal * 100) + '%';
+      document.getElementById('sbBarBig').style.width   = (bigP   / sbTotal * 100) + '%';
+      const sbBet = lastPredictedSB === 'small' ? '🔵 Model bets SMALL' : '🟡 Model bets BIG';
+      document.getElementById('sbWinner').innerHTML =
+        (smallP > bigP ? '📉 SMALL leads' : bigP > smallP ? '📈 BIG leads' : '⚖️ Even split') +
+        ' &nbsp;|&nbsp; <b>' + Math.round(Math.max(smallP,bigP)/sbTotal*100) + '%</b> conf' +
+        '<br><span style="font-size:0.67rem;opacity:0.65;">' + sbBet + ' — tracked as S/B Acc</span>';
+
+      /* ── Color probability panel — fixed rules ───────────────── */
+      // Red   = sum prob of even numbers (0,2,4,6,8)
+      // Green = sum prob of odd numbers  (1,3,5,7,9)
+      // Purple= sum prob of {0, 5}
+      let wRed = 0, wGreen = 0, wPurple = 0, totProb = 0;
+      preds.forEach(p => {
+        if (p.number % 2 === 0) wRed   += p.probability;
+        else                     wGreen += p.probability;
+        if (p.number === 0 || p.number === 5) wPurple += p.probability;
+        totProb += p.probability;
+      });
+      const rgTotal  = wRed + wGreen || 1;
+      const dispRed  = Math.round(wRed    / rgTotal * 1000) / 10;
+      const dispGrn  = Math.round(wGreen  / rgTotal * 1000) / 10;
+      const dispPur  = Math.round(wPurple / totProb  * 1000) / 10;
+
+      document.getElementById('redFill').style.width    = dispRed + '%';
+      document.getElementById('greenFill').style.width  = dispGrn + '%';
+      document.getElementById('purpleFill').style.width = dispPur + '%';
+      document.getElementById('redPct').textContent     = dispRed + '%';
+      document.getElementById('greenPct').textContent   = dispGrn + '%';
+      document.getElementById('purplePct').textContent  = dispPur + '%';
+
+    } finally {
+      btn.innerHTML = 'Predict Next →';
+      btn.disabled  = false;
+    }
+  }
+
+  /* ── Feedback / Training ───────────────────────────────────────── */
+  async function doFeedback() {
+    const actual = document.getElementById('actualNum').value.trim();
+    if (!actual)  { document.getElementById('actualNum').focus(); return; }
+    if (!lastCur) { showMsg('Make a prediction first.', false); return; }
+
+    const actualNum = parseInt(actual);
+    if (actualNum < 0 || actualNum > 9 || isNaN(actualNum)) {
+      showMsg('Enter a number between 0 and 9.', false); return;
+    }
+
+    const actualSB    = actualNum <= 4 ? 'small' : 'big';
+    const actualColor = dominantColor(actualNum);   // auto-derived
+
+    const res  = await fetch('/feedback', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        current:      lastCur,
+        prev:         lastPrev,
+        actual:       actual,
+        top_predicted: lastTop,
+        predicted_sb: lastPredictedSB,
+      }),
+    });
+    const data = await res.json();
+
+    const sbCorrect  = data.sb_correct;
+    const clrCorrect = data.color_correct;
+    const sb = s => s ? s.toUpperCase() : '?';
+
+    showMsg(
+      (sbCorrect ? '✓' : '✗') +
+      ` SB: bet ${sb(lastPredictedSB)} · got ${actualNum}=${sb(actualSB)}` +
+      ` | clr: ${colorLabel(actualNum)} ${clrCorrect ? '✓' : '✗'}`,
+      sbCorrect
+    );
+
+    setStats(
+      data.sb_accuracy    ?? '—',
+      data.color_accuracy ?? '—',
+      data.model_accuracy ?? '—',
+      data.total
+    );
+
+    history.unshift({
+      prev: lastPrev, cur: lastCur,
+      predSB: lastPredictedSB,
+      actual: actualNum, actualSB,
+      sbCorrect,
+    });
+    if (history.length > 30) history.pop();
+    renderLog();
+
+    /* Auto-advance */
+    document.getElementById('prevNum').value   = lastCur;
+    document.getElementById('currNum').value   = actual;
+    document.getElementById('actualNum').value = '';
+    updateColorPreview(null);
+
+    /* Auto-predict for the next number */
+    doPrediction();
+  }
+
+  /* ── Keyboard shortcuts ────────────────────────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.activeElement.id === 'actualNum') doFeedback();
+      else doPrediction();
+    }
+  });
+
+  /* ── Load initial stats ─────────────────────────────────────────── */
+  fetch('/stats')
+    .then(r => r.json())
+    .then(d => setStats(
+      d.sb_accuracy    ?? 0,
+      d.color_accuracy ?? 0,
+      d.model_accuracy ?? 0,
+      d.total
+    ))
+    .catch(() => {});
+</script>
+
+</body>
+</html>
