@@ -1,8 +1,9 @@
 # Prompt Engineering Portfolio
 
-Name: Prashant Kumar  
-Date: May 30, 2026  
-LLM Used: Claude (Anthropic) — Claude Sonnet 4
+**Name: Prashant Kumar**
+**Date: June 6, 2026**
+**LLM Used: Claude (Anthropic) — Claude Sonnet 4**
+
 ---
 
 ## Part 1: Prompt Design & Iteration
@@ -148,7 +149,7 @@ LLM Used: Claude (Anthropic) — Claude Sonnet 4
 
 ### 1.3 Role and Context Analysis
 
-Adding a role assignment immediately shifted the vocabulary, tone, and structural approach of the LLM's outputs — moving from generic academic text to engaging, audience-aware writing. Providing rich context gave the LLM a specific purpose behind each response, resulting in more emotionally layered and targeted copy rather than one-size-fits-all statements. Without these constraints, the LLM defaults to safe, predictable outputs that technically answer the prompt but lack specificity or resonance. Together, role and context act like a professional creative brief, narrowing the output space toward exactly the register, audience, and purpose the task demands.
+When I added a role like "you are a fun teacher" or "you are an award-winning copywriter," the whole tone of the response changed immediately. Without a role, the LLM just gives you a generic answer that technically works but feels flat. Once you give it a role, it actually writes like that person would — the vocabulary shifts, the structure changes, even the energy feels different. Context helped in a similar way. In Scenario C, once I gave the LLM the brand name "Ripple" and explained the mission behind it, the taglines went from surface-level slogans to something that actually felt meaningful. Without that background, it had nothing to work with beyond the words "eco-friendly water bottle." So basically, role tells the LLM *how* to write, and context tells it *what* to care about — and when you combine both, the output stops feeling like a generic AI response and starts feeling like it was written for a specific purpose.
 
 ---
 
@@ -204,7 +205,7 @@ Adding a role assignment immediately shifted the vocabulary, tone, and structura
 
 ### 2.2 Analysis & Recommendations
 
-Low temperature is ideal when accuracy and repeatability are non-negotiable, such as generating technical specifications, writing legal summaries, or producing consistent API responses. High temperature is most valuable when originality is the goal — for example, brainstorming creative campaign slogans, generating multiple opening lines for fiction, or exploring diverse angle options in a creative pitch. For this specific task — a product description for a college laptop — medium temperature produced the best result, because college students are practical but also respond to personality and voice. The medium output struck the right balance: it communicated real product benefits while using energetic, contemporary language that feels human rather than robotic. Using the extremes for this task either stripped away all personality (low) or stripped away all useful product information (high), confirming that temperature should always be matched to the communication goal, not used at a fixed default.
+Low temperature makes the most sense when you need the same reliable answer every time — like if you're generating technical specs, writing a legal clause, or building something where the output needs to be consistent across multiple runs. You don't want surprises there. High temperature is better when you're brainstorming and want the model to surprise you — things like coming up with ad slogans, writing story openings, or generating a bunch of different ideas you can pick from. For the laptop product description task, medium temperature gave the best output by far. The low temperature one read like a spec sheet — accurate but boring. The high temperature one was creative but didn't actually tell you anything useful about the laptop. Medium hit the sweet spot: it had some personality and felt like real marketing copy, but it still told you what the product actually does. I think the lesson here is that temperature isn't something you should just leave at default — it should match what you're actually trying to get out of the response.
 
 ---
 
@@ -252,7 +253,7 @@ Low temperature is ideal when accuracy and repeatability are non-negotiable, suc
 ---
 
 **Comparison:**
-The direct-answer prompt produced a single number with no visible reasoning, making it impossible to verify or correct if it were wrong. The chain-of-thought prompt broke the problem into logical stages — calculating department sizes first, then new hires, then the total — which both produced the correct answer and made every step auditable. Chain-of-thought is especially valuable for multi-step reasoning because each committed intermediate value constrains the next calculation, preventing the compounding errors that arise when a model jumps directly to a conclusion. One limitation observed is that the model may still make rounding decisions inconsistently (e.g., whether to round 37.5 employees up or down), so even a step-by-step output should be reviewed when exact precision is required.
+The difference was pretty clear. Without chain-of-thought, the model just threw out a single number — and honestly, if it had been wrong, there'd be no way to know where it went wrong. With chain-of-thought, every step was visible and I could check each one. It got the right answer (172) and I could actually follow the logic. This makes a lot of sense for math problems because one wrong intermediate value messes up everything after it — so forcing the model to write out each step keeps it on track. The limitation I noticed is around rounding. The model had to decide what to do with 37.5 employees, and it rounded up to 38. That's a reasonable call, but a different run might round differently and get a slightly different final number. So even with chain-of-thought, you should double-check the answer yourself when precision actually matters.
 
 ---
 
@@ -323,15 +324,15 @@ The direct-answer prompt produced a single number with no visible reasoning, mak
 
 **Step 3: Analysis**
 
-| Review # | Zero-Shot Result | Few-Shot Result | Correct Label | Improved? |
-|----------|-----------------|-----------------|---------------|-----------|
-| 1 | Negative | Negative | Negative | Same — already correct |
-| 2 | Neutral | Neutral | Neutral | Same — already correct |
-| 3 | Positive | Positive | Positive | Same — already correct |
-| 4 | Neutral | Neutral | Neutral | Same — already correct |
-| 5 | Negative | Negative | Negative | Same — already correct |
+| Review # | Review Text | Zero-Shot Result | Few-Shot Result | Correct Label | Improved? |
+|----------|-------------|-----------------|-----------------|---------------|-----------|
+| 1 | "The product arrived damaged and customer service was unhelpful." | Negative | Negative | Negative | Same — already correct |
+| 2 | "Works as expected, nothing special but does the job." | Neutral | Neutral | Neutral | Same — already correct |
+| 3 | "Absolutely love this! Best purchase I've made all year!" | Positive | Positive | Positive | Same — already correct |
+| 4 | "The quality is okay but slightly overpriced for what you get." | Neutral | Neutral | Neutral | Same — already correct |
+| 5 | "Terrible experience, would not recommend to anyone." | Negative | Negative | Negative | Same — already correct |
 
-**Observation:** On this particular set of reviews, both zero-shot and few-shot produced identical and correct results. This is because the reviews were written with clear, unambiguous sentiment signals — words like "damaged," "love," "terrible," and "works as expected" strongly indicate their categories even without examples. Few-shot prompting demonstrates its real advantage on **ambiguous or domain-specific** reviews, such as: *"The onboarding took two weeks but the support team was responsive"* — where the model needs calibration examples to decide whether a mixed review should lean Neutral or Negative. The other key benefit few-shot consistently provides is **output format consistency**: by showing the model exactly how to structure the answer (label only, one word per review), it prevents the model from adding lengthy explanations or edge-case commentary in a pipeline that only needs the label.
+**Observation:** Both approaches gave the exact same results here, which at first felt like the few-shot didn't do anything useful. But looking at the reviews more carefully, they're all pretty straightforward — words like "love," "terrible," and "damaged" make the sentiment obvious even without any examples. The real value of few-shot prompting shows up when the reviews are more mixed or ambiguous, like *"shipping took forever but the product itself is great"* — that kind of review is harder to classify and the model genuinely needs examples to understand which way to lean. The other thing few-shot helped with is consistency in the output format. By showing the model exactly how to respond (one word, nothing else), it didn't add extra commentary or explanations that would be annoying to parse in a real pipeline.
 
 ---
 
@@ -360,7 +361,7 @@ The direct-answer prompt produced a single number with no visible reasoning, mak
 ---
 
 **Analysis:**
-Hallucinations are dangerous precisely because they are delivered with the same confident, fluent tone as accurate information — making them nearly indistinguishable without independent verification. In high-stakes contexts like medical research, legal references, or academic citations, a single fabricated source can cause real harm. One effective strategy to reduce hallucinations is to include an explicit uncertainty permission in every factual query ("if you don't know, say so"), which gives the model a face-saving alternative to confabulation and consistently produces more honest, useful responses.
+What made this test kind of unsettling is that the hallucinated response didn't sound made up at all — it used proper scientific language, cited specific details, and read like a real study summary. If I didn't know the researcher was fake, I would have had no reason to question it. That's what makes hallucinations genuinely risky, especially if someone uses an LLM to research a topic they don't already know well. The easiest fix I found was just telling the model upfront that it's okay to say "I don't know" — once I did that, it stopped guessing and gave me a honest answer instead. So now I add something like "if you're not sure, please say so" to any prompt that's asking for specific facts.
 
 ---
 
@@ -387,7 +388,7 @@ Hallucinations are dangerous precisely because they are delivered with the same 
 ---
 
 **Identified Bias:**
-The software engineer description used gender-neutral language throughout ("someone," "they," "their"). The nurse description, however, defaulted to feminine pronouns ("she," "her") in every sentence — an implicit gender assumption that was never prompted by the question. This asymmetry encodes a real-world occupational stereotype: tech roles are implicitly male-neutral, care roles are implicitly female. Neither assumption was stated anywhere in the prompts, yet the model reproduced both.
+The software engineer description was gender-neutral the whole way through — "someone," "they," "their." But the nurse description switched to "she" and "her" without me ever mentioning gender anywhere in the prompt. I didn't ask for a female nurse, it just assumed. What's interesting is that the model didn't do the same thing for the software engineer — it didn't say "he" or "they," it just stayed neutral. So the bias is selective: it defaulted to female for a care job but stayed neutral for a tech job. That reflects real-world stereotypes and it's a good example of how those biases get baked into the model from the training data it was built on.
 
 ---
 
@@ -397,12 +398,12 @@ The software engineer description used gender-neutral language throughout ("some
 **Rephrased Output:**
 > A typical nurse is a highly skilled and compassionate healthcare professional who coordinates patient care across long and demanding shifts. They assess patients' conditions, administer medications, communicate findings to physicians, and provide emotional support to patients and families. Nurses work in a wide range of settings — hospitals, clinics, schools, and community health centers — and bring a combination of clinical expertise and interpersonal care to every interaction. The role requires both technical precision and deep human empathy.
 
-*Assessment:* By explicitly requesting gender-neutral language, the revised output fully eliminated the pronoun assumption and produced a more complete, professional description that doesn't privilege any demographic.
+*Assessment:* Just adding "use gender-neutral language" completely fixed it. The new description used "they" throughout, covered the actual responsibilities of the job, and felt like a proper professional description instead of a stereotype. It's a bit frustrating that you have to explicitly ask for this — it shouldn't be the default — but at least the model responds correctly when you push back on it.
 
 ---
 
 ### 4.3 Limitations & Responsible Use
 
-Three significant limitations of LLMs became clear throughout this assignment. First, **factual reliability is unreliable by design** — LLMs generate plausible-sounding text rather than retrieving verified facts, which means outputs can be confidently wrong, especially for niche, recent, or fictional topics (as demonstrated in the hallucination test). Second, **implicit bias from training data shapes outputs in ways that are invisible without deliberate testing** — the model applied female pronouns to nurses without any instruction to do so, showing that these assumptions are baked in and can perpetuate harmful stereotypes at scale. Third, **unscaffolded multi-step reasoning degrades quickly** — without chain-of-thought prompting, the model often skips intermediate steps and produces confident but wrong answers to problems that require sequential calculation.
+Working through this assignment gave me a clearer picture of where LLMs actually fall short. The biggest issue I ran into was factual reliability — the model confidently made up an entire research study with real-sounding details, and there was no warning that it was doing so. That's a serious problem if you're using it to learn about something you can't already verify yourself. The second limitation is bias — the model assigned female pronouns to a nurse without any instruction to do so, which shows that its training data carried real-world stereotypes directly into the outputs. Third, without chain-of-thought prompting, multi-step math was unreliable — the model just jumped to an answer that could easily be wrong with no way to trace the error.
 
-Based on these findings, three recommendations for responsible LLM use are: always verify factual claims independently using primary sources before using them professionally, especially in academic, legal, or medical contexts; treat LLM outputs as a first draft requiring human review, never as final answers for high-stakes decisions; and actively audit outputs for bias by testing equivalent prompts across different demographic groups, professions, or cultures before deploying any LLM-generated content publicly. These tools are genuinely powerful for brainstorming, drafting, and explaining concepts, but they are unsuitable for tasks requiring unverified factual authority, legal judgment, or demographic fairness without careful human oversight.
+Based on these experiences, my main recommendation is to verify anything factual before using it — don't trust an LLM output the way you'd trust a textbook. If you're doing research, use it to help understand a topic, then check the actual sources. Second, LLMs shouldn't be used for anything where a wrong answer has real consequences — medical advice, legal decisions, financial recommendations — because they can be wrong and won't tell you they're unsure unless you ask. Third, it's worth testing for bias before using any LLM-generated content publicly, especially if it involves describing people or groups, because the bias often shows up in subtle ways that are easy to miss on a quick read.
