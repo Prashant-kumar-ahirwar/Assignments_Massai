@@ -149,7 +149,7 @@
 
 ### 1.3 Role and Context Analysis
 
-When I added a role like "you are a fun teacher" or "you are an award-winning copywriter," the whole tone of the response changed immediately. Without a role, the LLM just gives you a generic answer that technically works but feels flat. Once you give it a role, it actually writes like that person would — the vocabulary shifts, the structure changes, even the energy feels different. Context helped in a similar way. In Scenario C, once I gave the LLM the brand name "Ripple" and explained the mission behind it, the taglines went from surface-level slogans to something that actually felt meaningful. Without that background, it had nothing to work with beyond the words "eco-friendly water bottle." So basically, role tells the LLM *how* to write, and context tells it *what* to care about — and when you combine both, the output stops feeling like a generic AI response and starts feeling like it was written for a specific purpose.
+Adding specific roles like a teacher or copywriter immediately shifted the LLM's vocabulary and energy, transforming flat responses into targeted, audience-aware writing. Providing rich context worked similarly; giving the brand backstory in Scenario C elevated the taglines from generic slogans to deeply meaningful copy. Without these constraints, the model defaults to safe, predictable answers that technically fill the prompt but lack any real resonance. Ultimately, roles dictate how the model writes while context dictates what it focuses on, combining to create highly purposeful outputs.
 
 ---
 
@@ -205,7 +205,7 @@ When I added a role like "you are a fun teacher" or "you are an award-winning co
 
 ### 2.2 Analysis & Recommendations
 
-Low temperature makes the most sense when you need the same reliable answer every time — like if you're generating technical specs, writing a legal clause, or building something where the output needs to be consistent across multiple runs. You don't want surprises there. High temperature is better when you're brainstorming and want the model to surprise you — things like coming up with ad slogans, writing story openings, or generating a bunch of different ideas you can pick from. For the laptop product description task, medium temperature gave the best output by far. The low temperature one read like a spec sheet — accurate but boring. The high temperature one was creative but didn't actually tell you anything useful about the laptop. Medium hit the sweet spot: it had some personality and felt like real marketing copy, but it still told you what the product actually does. I think the lesson here is that temperature isn't something you should just leave at default — it should match what you're actually trying to get out of the response.
+Low temperature is ideal when accuracy and predictability are non-negotiable, such as generating technical specifications or consistent data outputs. Conversely, high temperature shines during brainstorming sessions where unexpected creativity, unique fiction hooks, or diverse ideas are needed. For this laptop product description, a medium temperature struck the perfect balance by blending essential factual benefits with engaging personality. The low setting felt too dry and robotic, while the high setting became overly metaphorical and omitted crucial product details entirely. Ultimately, parameter control should always be carefully matched to the specific communication goal rather than left on default.
 
 ---
 
@@ -253,7 +253,7 @@ Low temperature makes the most sense when you need the same reliable answer ever
 ---
 
 **Comparison:**
-The difference was pretty clear. Without chain-of-thought, the model just threw out a single number — and honestly, if it had been wrong, there'd be no way to know where it went wrong. With chain-of-thought, every step was visible and I could check each one. It got the right answer (172) and I could actually follow the logic. This makes a lot of sense for math problems because one wrong intermediate value messes up everything after it — so forcing the model to write out each step keeps it on track. The limitation I noticed is around rounding. The model had to decide what to do with 37.5 employees, and it rounded up to 38. That's a reasonable call, but a different run might round differently and get a slightly different final number. So even with chain-of-thought, you should double-check the answer yourself when precision actually matters.
+While the direct-answer prompt provided no visible reasoning, chain-of-thought broke the problem into distinct, auditable stages that kept the calculation on track. Forcing the model to lay out intermediate steps prevents compounding mathematical errors, which is crucial since one early mistake ruins the entire final outcome. However, a key limitation involves rounding inconsistencies, as seen when the model rounded fractional employees up to thirty-eight. Because different runs might handle rounding variations unpredictably, human oversight remains necessary whenever absolute precision is required.
 
 ---
 
@@ -332,7 +332,8 @@ The difference was pretty clear. Without chain-of-thought, the model just threw 
 | 4 | "The quality is okay but slightly overpriced for what you get." | Neutral | Neutral | Neutral | Same — already correct |
 | 5 | "Terrible experience, would not recommend to anyone." | Negative | Negative | Negative | Same — already correct |
 
-**Observation:** Both approaches gave the exact same results here, which at first felt like the few-shot didn't do anything useful. But looking at the reviews more carefully, they're all pretty straightforward — words like "love," "terrible," and "damaged" make the sentiment obvious even without any examples. The real value of few-shot prompting shows up when the reviews are more mixed or ambiguous, like *"shipping took forever but the product itself is great"* — that kind of review is harder to classify and the model genuinely needs examples to understand which way to lean. The other thing few-shot helped with is consistency in the output format. By showing the model exactly how to respond (one word, nothing else), it didn't add extra commentary or explanations that would be annoying to parse in a real pipeline.
+**Observation:** 
+Because these initial customer reviews contained highly explicit keywords, both zero-shot and few-shot classifications yielded identical, correct results. However, few-shot prompting becomes essential for calibrating the model's judgment on highly ambiguous, sarcastic, or mixed-sentiment feedback. Additionally, providing explicit examples establishes rigid structural consistency, forcing the model to output clean, single-word labels instead of adding unwanted conversational commentary.
 
 ---
 
@@ -361,7 +362,7 @@ The difference was pretty clear. Without chain-of-thought, the model just threw 
 ---
 
 **Analysis:**
-What made this test kind of unsettling is that the hallucinated response didn't sound made up at all — it used proper scientific language, cited specific details, and read like a real study summary. If I didn't know the researcher was fake, I would have had no reason to question it. That's what makes hallucinations genuinely risky, especially if someone uses an LLM to research a topic they don't already know well. The easiest fix I found was just telling the model upfront that it's okay to say "I don't know" — once I did that, it stopped guessing and gave me a honest answer instead. So now I add something like "if you're not sure, please say so" to any prompt that's asking for specific facts.
+The hallucinated response was incredibly convincing because it utilized precise academic phrasing and realistic details to deliver completely fabricated findings with total confidence. This deceptive plausibility makes unverified informational prompts highly risky, especially in high-stakes fields or when researching unfamiliar topics. Fortunately, explicitly prompting the model with an "uncertainty permission" effectively eliminates this guesswork, forcing it to declare its lack of data honestly.
 
 ---
 
