@@ -1,9 +1,8 @@
 # Prompt Engineering Portfolio
 
-Name: Prashant Kumar
-Date: June 6, 2026
+Name: Prashant Kumar  
+Date: May 30, 2026  
 LLM Used: Claude (Anthropic) — Claude Sonnet 4
-
 ---
 
 ## Part 1: Prompt Design & Iteration
