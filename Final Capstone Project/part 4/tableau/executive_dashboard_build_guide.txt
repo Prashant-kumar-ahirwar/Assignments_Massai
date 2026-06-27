@@ -1,0 +1,48 @@
+TABLEAU WORKBOOK — executive_dashboard.twbx
+============================================
+This file documents the Tableau workbook structure.
+
+TO CREATE THE TABLEAU WORKBOOK:
+1. Open Tableau Desktop
+2. Connect to: data/dashboard_sales_data.xlsx
+3. Create the 8 calculated fields listed in README.md
+4. Build the 9 sheets listed below
+5. Assemble into the Executive Dashboard
+6. Save as: tableau/executive_dashboard.twbx (Packaged Workbook)
+
+SHEETS TO CREATE:
+Sheet 1 : Sales Trend       — Line chart: Month vs SUM(Sales), dual axis Profit Margin %
+Sheet 2 : Regional Sales    — Horizontal bar: Region vs SUM(Sales), color by Margin
+Sheet 3 : Category Profit   — Sub-category bars: SUM(Profit), color by Category
+Sheet 4 : Segment View      — Grouped bars: Segment vs Sales/Profit/Margin
+Sheet 5 : Shipping Perf.    — Bar: Ship Mode vs AVG(Delivery Days), line: Return Rate
+Sheet 6 : Discount Impact   — Bar: Discount Band vs AVG(Profit), ordered
+Sheet 7 : Return Analysis   — Bar: Region/Segment vs Return Rate %
+Sheet 8 : Campaign Channel  — Dual bar: Channel vs Sales and Profit
+Sheet 9 : KPI Cards         — 8 summary metrics as text/number cards
+
+DASHBOARD:
+- Title: "Retail Executive Dashboard — Sales Performance Overview"
+- KPI Row: 8 cards across the top
+- Row 1: Sales Trend (60% width) + Regional Bar (40% width)
+- Row 2: Category Profit + Segment + Shipping
+- Row 3: Discount Impact + Return Analysis + Channel Performance
+- Filters: Region, Category, Segment, Date Range, Ship Mode, Discount Band, Channel
+- Action: Click any region bar → filters all other views to that region
+
+CALCULATED FIELDS:
+[Profit Margin]       = [Profit] / [Sales]
+[Cost]                = [Sales] - [Profit]
+[Avg Order Value]     = SUM([Sales]) / COUNTD([Order ID])
+[Return Rate]         = SUM([Return Flag]) / COUNT([Order ID])
+[Delay Bucket]        = IF [Delivery Days] <= 1 THEN "Express (0-1d)"
+                        ELSEIF [Delivery Days] <= 3 THEN "Fast (2-3d)"
+                        ELSEIF [Delivery Days] <= 5 THEN "Standard (4-5d)"
+                        ELSE "Slow (6+d)" END
+[Discount Band]       = IF [Discount] = 0 THEN "No Discount"
+                        ELSEIF [Discount] <= 0.10 THEN "Low (1-10%)"
+                        ELSEIF [Discount] <= 0.20 THEN "Medium (11-20%)"
+                        ELSEIF [Discount] <= 0.30 THEN "High (21-30%)"
+                        ELSE "Very High (>30%)" END
+[Profitable Order]    = IF [Profit] > 0 THEN "Profitable" ELSE "Loss" END
+[Year-Month]          = DATETRUNC('month', [Order Date])
